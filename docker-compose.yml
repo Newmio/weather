@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  weather:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8088"
+    environment:
+      - CGO_ENABLED=0
+      - GOOS=linux
+    command: ["/app/weather"]

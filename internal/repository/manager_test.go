@@ -502,7 +502,8 @@ func TestManager_GetWeather(t *testing.T) {
 				c.On("GetWeather", 703448).Return(entity.Weather{}, nil)
 			},
 			mockBehaviourHttp: func(h *httpmock.IHttp) {
-				h.On("GetWeather", 703448).Return(entity.Weather{}, fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."))
+				h.On("GetWeather", 703448).Return(entity.Weather{}, 
+					fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."))
 			},
 			expected:    entity.Weather{},
 			expectedErr: fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."),
