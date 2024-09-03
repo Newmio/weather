@@ -32,38 +32,38 @@ func TestHandler_average(t *testing.T) {
 			mockBehavior: func(s *mocks.IService) {
 				weather := []entity.WeatherAverage{
 					{
-						City: "riga",
-						Temp: 20,
+						City:     "riga",
+						Temp:     20,
 						Humidity: 55,
 					},
 					{
-						City: "tallinn",
-						Temp: 18,
+						City:     "tallinn",
+						Temp:     18,
 						Humidity: 66,
 					},
 					{
-						City: "sofia",
-						Temp: 22,
+						City:     "sofia",
+						Temp:     22,
 						Humidity: 51,
 					},
 					{
-						City: "minsk",
-						Temp: 19,
+						City:     "minsk",
+						Temp:     19,
 						Humidity: 41,
 					},
 					{
-						City: "kyiv",
-						Temp: 23,
+						City:     "kyiv",
+						Temp:     23,
 						Humidity: 24,
 					},
 					{
-						City: "vilnius",
-						Temp: 19,
+						City:     "vilnius",
+						Temp:     19,
 						Humidity: 48,
 					},
 				}
 
-				s.On("GetAverage",  mock.MatchedBy(func(arg []string) bool { return true })).Return(weather, nil)
+				s.On("GetAverage", mock.MatchedBy(func(arg []string) bool { return true })).Return(weather, nil)
 			},
 			expectedCode: 200,
 			expectedBody: `[{"city":"riga","temp":20,"humidity":55},{"city":"tallinn","temp":18,"humidity":66},{"city":"sofia","temp":22,"humidity":51},{"city":"minsk","temp":19,"humidity":41},{"city":"kyiv","temp":23,"humidity":24},{"city":"vilnius","temp":19,"humidity":48}]`,
@@ -76,14 +76,14 @@ func TestHandler_average(t *testing.T) {
 			expectedBody: `{"error":"empty cities map"}`,
 		},
 		{
-			name:         "bad request empty cities map",
+			name: "invalid api key",
 			cities: map[string]int{
 				"kyiv": 703448, "vilnius": 593116,
 				"riga": 456173, "tallinn": 588409,
 				"sofia": 727011, "minsk": 625144,
 			},
 			mockBehavior: func(s *mocks.IService) {
-				s.On("GetAverage",  mock.MatchedBy(func(arg []string) bool { return true })).Return([]entity.WeatherAverage{}, 
+				s.On("GetAverage", mock.MatchedBy(func(arg []string) bool { return true })).Return([]entity.WeatherAverage{},
 					fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."))
 			},
 			expectedCode: 500,
@@ -268,15 +268,15 @@ func TestHandler_weather(t *testing.T) {
 			expectedBody: `{"error":"empty cities map"}`,
 		},
 		{
-			name:         "invalid api key",
+			name: "invalid api key",
 			cities: map[string]int{
 				"kyiv": 703448, "vilnius": 593116,
 				"riga": 456173, "tallinn": 588409,
 				"sofia": 727011, "minsk": 625144,
 			},
 			mockBehavior: func(s *mocks.IService) {
-				s.On("GetWeatherList",  mock.MatchedBy(func(arg []int) bool { return true })).
-				Return(entity.Weather{}, fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."))
+				s.On("GetWeatherList", mock.MatchedBy(func(arg []int) bool { return true })).
+					Return(entity.Weather{}, fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."))
 			},
 			expectedCode: 500,
 			expectedBody: `{"error":"Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."}`,
@@ -385,8 +385,8 @@ func TestHandler_weatherByCity(t *testing.T) {
 			expectedBody: `{"error":"city not found"}`,
 		},
 		{
-			name:         "bad param in service",
-			city:         "kremenchuk",
+			name: "bad param in service",
+			city: "kremenchuk",
 			cities: map[string]int{
 				"kyiv": 703448, "vilnius": 593116,
 				"riga": 456173, "tallinn": 588409,
@@ -400,31 +400,31 @@ func TestHandler_weatherByCity(t *testing.T) {
 			expectedBody: `{"error":"No data: 404006"}`,
 		},
 		{
-			name:         "invalid api key",
-			city:         "kyiv",
+			name: "invalid api key",
+			city: "kyiv",
 			cities: map[string]int{
 				"kyiv": 703448, "vilnius": 593116,
 				"riga": 456173, "tallinn": 588409,
 				"sofia": 727011, "minsk": 625144,
 			},
 			mockBehavior: func(s *mocks.IService) {
-				s.On("GetWeather",  mock.MatchedBy(func(arg int) bool { return true })).
-				Return(entity.Weather{}, fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."))
+				s.On("GetWeather", mock.MatchedBy(func(arg int) bool { return true })).
+					Return(entity.Weather{}, fmt.Errorf("Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."))
 			},
 			expectedCode: 500,
 			expectedBody: `{"error":"Invalid API key. Please see https://openweathermap.org/faq#error401 for more info."}`,
 		},
 		{
-			name:         "empty weather list",
-			city:         "kyiv",
+			name: "empty weather list",
+			city: "kyiv",
 			cities: map[string]int{
 				"kyiv": 703448, "vilnius": 593116,
 				"riga": 456173, "tallinn": 588409,
 				"sofia": 727011, "minsk": 625144,
 			},
 			mockBehavior: func(s *mocks.IService) {
-				s.On("GetWeather",  mock.MatchedBy(func(arg int) bool { return true })).
-				Return(entity.Weather{}, nil)
+				s.On("GetWeather", mock.MatchedBy(func(arg int) bool { return true })).
+					Return(entity.Weather{}, nil)
 			},
 			expectedCode: 400,
 			expectedBody: `{"error":"city not found"}`,
