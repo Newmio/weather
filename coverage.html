@@ -1,0 +1,1222 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>cmd: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">weather/cmd/main.go (0.0%)</option>
+				
+				<option value="file1">weather/internal/app/app.go (0.0%)</option>
+				
+				<option value="file2">weather/internal/app/config.go (0.0%)</option>
+				
+				<option value="file3">weather/internal/domain/dto/weather.go (100.0%)</option>
+				
+				<option value="file4">weather/internal/domain/service/mocks/i_service.go (64.6%)</option>
+				
+				<option value="file5">weather/internal/domain/service/service.go (0.0%)</option>
+				
+				<option value="file6">weather/internal/domain/service/weather.go (88.2%)</option>
+				
+				<option value="file7">weather/internal/repository/cache/cache.go (0.0%)</option>
+				
+				<option value="file8">weather/internal/repository/cache/mocks/i_cache.go (60.9%)</option>
+				
+				<option value="file9">weather/internal/repository/http/http.go (0.0%)</option>
+				
+				<option value="file10">weather/internal/repository/http/mocks/i_http.go (63.8%)</option>
+				
+				<option value="file11">weather/internal/repository/http/weather.go (0.0%)</option>
+				
+				<option value="file12">weather/internal/repository/manager.go (97.0%)</option>
+				
+				<option value="file13">weather/internal/repository/mocks/i_repository.go (21.3%)</option>
+				
+				<option value="file14">weather/internal/transport/handler.go (80.0%)</option>
+				
+				<option value="file15">weather/internal/transport/weather.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import "weather/internal/app"
+
+func main() <span class="cov0" title="0">{
+        if err := app.Run(); err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package app
+
+import (
+        "net/http"
+        "time"
+        "weather/internal/domain/service"
+        "weather/internal/repository"
+        repocache "weather/internal/repository/cache"
+        repohttp "weather/internal/repository/http"
+        "weather/internal/transport"
+
+        "github.com/labstack/echo/v4"
+)
+
+func Run() error <span class="cov0" title="0">{
+
+        cfg, err := getCities()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">client := &amp;http.Client{
+                Transport: &amp;http.Transport{
+                        MaxIdleConns:        10,
+                        IdleConnTimeout:     30 * time.Second,
+                        TLSHandshakeTimeout: 10 * time.Second,
+                },
+                Timeout: 10 * time.Second,
+        }
+
+        httpRepo := repohttp.NewHttpRepo(client, cfg.Token)
+        cacheRepo := repocache.NewChache()
+        repo := repository.NewRepo(httpRepo, cacheRepo)
+        service := service.NewService(repo)
+        handler := transport.NewHandler(cfg.Cities, service)
+
+        e := echo.New()
+        handler.InitRoutes(e)
+        e.Logger.Fatal(e.Start(":8088"))
+
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package app
+
+import (
+        "github.com/spf13/viper"
+)
+
+type Config struct {
+        Cities map[string]int
+        Token  string
+}
+
+func getCities() (Config, error) <span class="cov0" title="0">{
+        v := viper.New()
+        v.AddConfigPath("configs")
+        v.SetConfigName("config")
+
+        if err := v.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                return Config{}, err
+        }</span>
+
+        <span class="cov0" title="0">cities := make(map[string]int)
+
+        for key, value := range v.GetStringMap("cities") </span><span class="cov0" title="0">{
+                cities[key] = value.(int)
+        }</span>
+
+        <span class="cov0" title="0">return Config{
+                Cities: cities,
+                Token:  v.GetString("token"),
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package dto
+
+import "weather/internal/domain/entity"
+
+type weatherResponse struct {
+        City      string  `json:"city"`
+        Temp      float64 `json:"temp"`
+        FeelsLike float64 `json:"feels_like"`
+        TempMin   float64 `json:"temp_min"`
+        TempMax   float64 `json:"temp_max"`
+        WindSpeed float64 `json:"wind_speed"`
+        WindDeg   int     `json:"wind_deg"`
+}
+
+func NewWeatherListResponse(weather []entity.List) []weatherResponse <span class="cov8" title="1">{
+        var response []weatherResponse
+
+        for _, w := range weather </span><span class="cov8" title="1">{
+                response = append(response, NewWeatherResponse([]entity.List{w}))
+        }</span>
+
+        <span class="cov8" title="1">return response</span>
+}
+
+func NewWeatherResponse(weather []entity.List) weatherResponse <span class="cov8" title="1">{
+        return weatherResponse{
+                City:      weather[0].Name,
+                Temp:      weather[0].Main.Temp,
+                FeelsLike: weather[0].Main.FeelsLike,
+                TempMin:   weather[0].Main.TempMin,
+                TempMax:   weather[0].Main.TempMax,
+                WindSpeed: weather[0].Wind.Speed,
+                WindDeg:   weather[0].Wind.Deg,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">// Code generated by mockery v2.44.1. DO NOT EDIT.
+
+package mocks
+
+import (
+        entity "weather/internal/domain/entity"
+
+        mock "github.com/stretchr/testify/mock"
+)
+
+// IService is an autogenerated mock type for the IService type
+type IService struct {
+        mock.Mock
+}
+
+// GetAverage provides a mock function with given fields: cities
+func (_m *IService) GetAverage(cities []string) ([]entity.WeatherAverage, error) <span class="cov8" title="1">{
+        ret := _m.Called(cities)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetAverage")</span>
+        }
+
+        <span class="cov8" title="1">var r0 []entity.WeatherAverage
+        var r1 error
+        if rf, ok := ret.Get(0).(func([]string) ([]entity.WeatherAverage, error)); ok </span><span class="cov0" title="0">{
+                return rf(cities)
+        }</span>
+        <span class="cov8" title="1">if rf, ok := ret.Get(0).(func([]string) []entity.WeatherAverage); ok </span><span class="cov0" title="0">{
+                r0 = rf(cities)
+        }</span> else<span class="cov8" title="1"> {
+                if ret.Get(0) != nil </span><span class="cov8" title="1">{
+                        r0 = ret.Get(0).([]entity.WeatherAverage)
+                }</span>
+        }
+
+        <span class="cov8" title="1">if rf, ok := ret.Get(1).(func([]string) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(cities)
+        }</span> else<span class="cov8" title="1"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov8" title="1">return r0, r1</span>
+}
+
+// GetWeather provides a mock function with given fields: cityId
+func (_m *IService) GetWeather(cityId int) (entity.Weather, error) <span class="cov8" title="1">{
+        ret := _m.Called(cityId)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetWeather")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func(int) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(cityId)
+        }</span>
+        <span class="cov8" title="1">if rf, ok := ret.Get(0).(func(int) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(cityId)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">if rf, ok := ret.Get(1).(func(int) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(cityId)
+        }</span> else<span class="cov8" title="1"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov8" title="1">return r0, r1</span>
+}
+
+// GetWeatherList provides a mock function with given fields: citiesId
+func (_m *IService) GetWeatherList(citiesId []int) (entity.Weather, error) <span class="cov8" title="1">{
+        ret := _m.Called(citiesId)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetWeatherList")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func([]int) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(citiesId)
+        }</span>
+        <span class="cov8" title="1">if rf, ok := ret.Get(0).(func([]int) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(citiesId)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">if rf, ok := ret.Get(1).(func([]int) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(citiesId)
+        }</span> else<span class="cov8" title="1"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov8" title="1">return r0, r1</span>
+}
+
+// NewIService creates a new instance of IService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func NewIService(t interface {
+        mock.TestingT
+        Cleanup(func())
+}) *IService <span class="cov0" title="0">{
+        mock := &amp;IService{}
+        mock.Mock.Test(t)
+
+        t.Cleanup(func() </span><span class="cov0" title="0">{ mock.AssertExpectations(t) }</span>)
+
+        <span class="cov0" title="0">return mock</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package service
+
+import (
+        "weather/internal/domain/entity"
+        "weather/internal/repository"
+)
+
+//go:generate mockery --name=IService --output=./mocks --case=underscore
+type IService interface {
+        GetWeather(cityId int) (entity.Weather, error)
+        GetWeatherList(citiesId []int) (entity.Weather, error)
+        GetAverage(cities []string) ([]entity.WeatherAverage, error)
+}
+
+type service struct {
+        r repository.IRepository
+}
+
+func NewService(r repository.IRepository) IService <span class="cov0" title="0">{
+        return &amp;service{r: r}
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package service
+
+import (
+        "weather/internal/domain/entity"
+)
+
+func (s *service) GetWeather(cityId int) (entity.Weather, error) <span class="cov0" title="0">{
+        return s.r.GetWeather(cityId)
+}</span>
+
+func (s *service) GetWeatherList(citiesId []int) (entity.Weather, error) <span class="cov0" title="0">{
+        return s.r.GetWeatherList(citiesId)
+}</span>
+
+func (s *service) GetAverage(cities []string) ([]entity.WeatherAverage, error) <span class="cov8" title="1">{
+        var average []entity.WeatherAverage
+        weathers := make(map[string][]entity.List)
+
+        for _, city := range cities </span><span class="cov8" title="1">{
+
+                weather, err := s.r.GetForecast(city)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+
+                <span class="cov8" title="1">weathers[city] = weather.List</span>
+        }
+
+        <span class="cov8" title="1">for city, list := range weathers </span><span class="cov8" title="1">{
+                var temp float64
+                var humidity int
+
+                for _, item := range list </span><span class="cov8" title="1">{
+                        temp += (item.Main.TempMin + item.Main.TempMax) / 2
+                        humidity += item.Main.Humidity
+                }</span>
+
+                <span class="cov8" title="1">average = append(average, entity.WeatherAverage{
+                        City:     city,
+                        Temp:     int(temp / float64(len(list))),
+                        Humidity: humidity / len(list),
+                })</span>
+        }
+        <span class="cov8" title="1">return average, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package repocache
+
+import (
+        "fmt"
+        "sync"
+        "time"
+        "weather/internal/domain/entity"
+)
+
+//go:generate mockery --name=ICache --output=./mocks --case=underscore
+type ICache interface {
+        GetWeather(cityId int) entity.Weather
+        SetWeather(cityId int, weather entity.Weather)
+        GetForecast(city string) entity.Weather
+        SetForecast(city string, average entity.Weather)
+}
+
+type cache struct {
+        weather  map[int]entity.Weather
+        forecast map[string]entity.Weather
+        mu       sync.RWMutex
+}
+
+func NewChache() ICache <span class="cov0" title="0">{
+        c := &amp;cache{
+                weather:  make(map[int]entity.Weather),
+                forecast: make(map[string]entity.Weather),
+        }
+
+        go c.clearWeather()
+        go c.clearAverage()
+
+        return c
+}</span>
+
+func (c *cache) clearWeather() <span class="cov0" title="0">{
+        ticker := time.NewTicker(time.Minute * 5)
+
+        for range ticker.C </span><span class="cov0" title="0">{
+                c.mu.Lock()
+                c.weather = make(map[int]entity.Weather)
+                fmt.Println("deleted weather")
+                c.mu.Unlock()
+        }</span>
+}
+
+func (c *cache) clearAverage() <span class="cov0" title="0">{
+        ticker := time.NewTicker(time.Hour * 24)
+
+        for range ticker.C </span><span class="cov0" title="0">{
+                c.mu.Lock()
+                c.forecast = make(map[string]entity.Weather)
+                c.mu.Unlock()
+        }</span>
+}
+
+func (c *cache) GetWeather(cityId int) entity.Weather <span class="cov0" title="0">{
+        c.mu.RLock()
+        defer c.mu.RUnlock()
+
+        if weather, ok := c.weather[cityId]; ok </span><span class="cov0" title="0">{
+                return weather
+        }</span>
+
+        <span class="cov0" title="0">return entity.Weather{}</span>
+}
+
+func (c *cache) SetWeather(cityId int, weather entity.Weather) <span class="cov0" title="0">{
+        c.mu.Lock()
+        defer c.mu.Unlock()
+        c.weather[cityId] = weather
+}</span>
+
+func (c *cache) GetForecast(city string) entity.Weather <span class="cov0" title="0">{
+        c.mu.RLock()
+        defer c.mu.RUnlock()
+
+        if forecast, ok := c.forecast[city]; ok </span><span class="cov0" title="0">{
+                return forecast
+        }</span>
+
+        <span class="cov0" title="0">return entity.Weather{}</span>
+}
+
+func (c *cache) SetForecast(city string, average entity.Weather) <span class="cov0" title="0">{
+        c.mu.Lock()
+        defer c.mu.Unlock()
+        c.forecast[city] = average
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">// Code generated by mockery v2.44.1. DO NOT EDIT.
+
+package mocks
+
+import (
+        entity "weather/internal/domain/entity"
+
+        mock "github.com/stretchr/testify/mock"
+)
+
+// ICache is an autogenerated mock type for the ICache type
+type ICache struct {
+        mock.Mock
+}
+
+// GetForecast provides a mock function with given fields: city
+func (_m *ICache) GetForecast(city string) entity.Weather <span class="cov8" title="1">{
+        ret := _m.Called(city)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetForecast")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        if rf, ok := ret.Get(0).(func(string) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(city)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">return r0</span>
+}
+
+// GetWeather provides a mock function with given fields: cityId
+func (_m *ICache) GetWeather(cityId int) entity.Weather <span class="cov8" title="1">{
+        ret := _m.Called(cityId)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetWeather")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        if rf, ok := ret.Get(0).(func(int) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(cityId)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">return r0</span>
+}
+
+// SetForecast provides a mock function with given fields: city, average
+func (_m *ICache) SetForecast(city string, average entity.Weather) <span class="cov8" title="1">{
+        _m.Called(city, average)
+}</span>
+
+// SetWeather provides a mock function with given fields: cityId, weather
+func (_m *ICache) SetWeather(cityId int, weather entity.Weather) <span class="cov8" title="1">{
+        _m.Called(cityId, weather)
+}</span>
+
+// NewICache creates a new instance of ICache. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func NewICache(t interface {
+        mock.TestingT
+        Cleanup(func())
+}) *ICache <span class="cov0" title="0">{
+        mock := &amp;ICache{}
+        mock.Mock.Test(t)
+
+        t.Cleanup(func() </span><span class="cov0" title="0">{ mock.AssertExpectations(t) }</span>)
+
+        <span class="cov0" title="0">return mock</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package repohttp
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "io"
+        "net/http"
+        "weather/internal/domain/entity"
+)
+
+//go:generate mockery --name=IHttp --output=./mocks --case=underscore
+
+type IHttp interface{
+        GetWeather(cityId int) (entity.Weather, error)
+        GetWeatherList(citiesId []int) (entity.Weather, error)
+        GetForecast(city string) (entity.Weather, error)
+}
+
+type httprepo struct {
+        client *http.Client
+        token  string
+}
+
+func NewHttpRepo(client *http.Client, token string) IHttp <span class="cov0" title="0">{
+        return &amp;httprepo{
+                client: client,
+                token:  token,
+        }
+}</span>
+
+func (r *httprepo) getError(body []byte)error<span class="cov0" title="0">{
+        var data map[string]interface{}
+
+        err := json.Unmarshal(body, &amp;data)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">if _, ok := data["message"]; ok </span><span class="cov0" title="0">{
+                return fmt.Errorf(data["message"].(string))
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Errorf("unknown error")</span>
+}
+
+func (r *httprepo) do(req entity.Request) (entity.Response, error) <span class="cov0" title="0">{
+        var body []byte
+
+        if req.Body != nil </span><span class="cov0" title="0">{
+                b, err := json.Marshal(req)
+                if err != nil </span><span class="cov0" title="0">{
+                        return entity.Response{}, err
+                }</span>
+                <span class="cov0" title="0">body = b</span>
+        }
+
+        <span class="cov0" title="0">request, err := http.NewRequest(req.Method, req.Url, bytes.NewBuffer(body))
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Response{}, err
+        }</span>
+
+        <span class="cov0" title="0">for key, value := range req.Headers </span><span class="cov0" title="0">{
+                request.Header.Add(key, value)
+        }</span>
+
+        <span class="cov0" title="0">response, err := r.client.Do(request)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Response{}, err
+        }</span>
+        <span class="cov0" title="0">defer response.Body.Close()
+
+        body, err = io.ReadAll(response.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Response{}, err
+        }</span>
+
+        <span class="cov0" title="0">return entity.Response{
+                Body:    body,
+                Headers: response.Header,
+                Status:  response.StatusCode,
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">// Code generated by mockery v2.44.1. DO NOT EDIT.
+
+package mocks
+
+import (
+        entity "weather/internal/domain/entity"
+
+        mock "github.com/stretchr/testify/mock"
+)
+
+// IHttp is an autogenerated mock type for the IHttp type
+type IHttp struct {
+        mock.Mock
+}
+
+// GetForecast provides a mock function with given fields: city
+func (_m *IHttp) GetForecast(city string) (entity.Weather, error) <span class="cov8" title="1">{
+        ret := _m.Called(city)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetForecast")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func(string) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(city)
+        }</span>
+        <span class="cov8" title="1">if rf, ok := ret.Get(0).(func(string) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(city)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">if rf, ok := ret.Get(1).(func(string) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(city)
+        }</span> else<span class="cov8" title="1"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov8" title="1">return r0, r1</span>
+}
+
+// GetWeather provides a mock function with given fields: cityId
+func (_m *IHttp) GetWeather(cityId int) (entity.Weather, error) <span class="cov8" title="1">{
+        ret := _m.Called(cityId)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetWeather")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func(int) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(cityId)
+        }</span>
+        <span class="cov8" title="1">if rf, ok := ret.Get(0).(func(int) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(cityId)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">if rf, ok := ret.Get(1).(func(int) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(cityId)
+        }</span> else<span class="cov8" title="1"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov8" title="1">return r0, r1</span>
+}
+
+// GetWeatherList provides a mock function with given fields: citiesId
+func (_m *IHttp) GetWeatherList(citiesId []int) (entity.Weather, error) <span class="cov8" title="1">{
+        ret := _m.Called(citiesId)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetWeatherList")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func([]int) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(citiesId)
+        }</span>
+        <span class="cov8" title="1">if rf, ok := ret.Get(0).(func([]int) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(citiesId)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">if rf, ok := ret.Get(1).(func([]int) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(citiesId)
+        }</span> else<span class="cov8" title="1"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov8" title="1">return r0, r1</span>
+}
+
+// NewIHttp creates a new instance of IHttp. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func NewIHttp(t interface {
+        mock.TestingT
+        Cleanup(func())
+}) *IHttp <span class="cov0" title="0">{
+        mock := &amp;IHttp{}
+        mock.Mock.Test(t)
+
+        t.Cleanup(func() </span><span class="cov0" title="0">{ mock.AssertExpectations(t) }</span>)
+
+        <span class="cov0" title="0">return mock</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package repohttp
+
+import (
+        "encoding/json"
+        "fmt"
+        "strconv"
+        "strings"
+        "weather/internal/domain/entity"
+)
+
+func (r *httprepo) GetForecast(city string) (entity.Weather, error) <span class="cov0" title="0">{
+        var weather entity.Weather
+
+        url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/forecast?units=metric&amp;q=%s&amp;appid=%s", city, r.token)
+
+        req := entity.Request{
+                Url:    url,
+                Method: "GET",
+                Headers: map[string]string{
+                        "Content-Type": "application/json",
+                },
+                Body: nil,
+        }
+
+        resp, err := r.do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Weather{}, err
+        }</span>
+
+        <span class="cov0" title="0">if resp.Status != 200 </span><span class="cov0" title="0">{
+                return entity.Weather{}, r.getError(resp.Body)
+        }</span>
+
+        <span class="cov0" title="0">err = json.Unmarshal(resp.Body, &amp;weather)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Weather{}, err
+        }</span>
+
+        <span class="cov0" title="0">return weather, nil</span>
+}
+
+func (r *httprepo) GetWeatherList(citiesId []int) (entity.Weather, error) <span class="cov0" title="0">{
+        var weather entity.Weather
+        var cities []string
+
+        for _, id := range citiesId </span><span class="cov0" title="0">{
+                cities = append(cities, strconv.Itoa(id))
+        }</span>
+
+        <span class="cov0" title="0">url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/group?id=%s&amp;units=metric&amp;appid=%s", strings.Join(cities, ","), r.token)
+
+        req := entity.Request{
+                Url:    url,
+                Method: "GET",
+                Headers: map[string]string{
+                        "Content-Type": "application/json",
+                },
+                Body: nil,
+        }
+
+        resp, err := r.do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Weather{}, err
+        }</span>
+
+        <span class="cov0" title="0">if resp.Status != 200 </span><span class="cov0" title="0">{
+                return entity.Weather{}, r.getError(resp.Body)
+        }</span>
+
+        <span class="cov0" title="0">err = json.Unmarshal(resp.Body, &amp;weather)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Weather{}, err
+        }</span>
+
+        <span class="cov0" title="0">return weather, nil</span>
+}
+
+func (r *httprepo) GetWeather(cityId int) (entity.Weather, error) <span class="cov0" title="0">{
+        var weather entity.Weather
+
+        url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/group?id=%d&amp;units=metric&amp;appid=%s", cityId, r.token)
+
+        req := entity.Request{
+                Url:    url,
+                Method: "GET",
+                Headers: map[string]string{
+                        "Content-Type": "application/json",
+                },
+                Body: nil,
+        }
+
+        resp, err := r.do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Weather{}, err
+        }</span>
+
+        <span class="cov0" title="0">if resp.Status != 200 </span><span class="cov0" title="0">{
+                return entity.Weather{}, r.getError(resp.Body)
+        }</span>
+
+        <span class="cov0" title="0">err = json.Unmarshal(resp.Body, &amp;weather)
+        if err != nil </span><span class="cov0" title="0">{
+                return entity.Weather{}, err
+        }</span>
+
+        <span class="cov0" title="0">return weather, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package repository
+
+import (
+        "weather/internal/domain/entity"
+        repocache "weather/internal/repository/cache"
+        repohttp "weather/internal/repository/http"
+)
+
+//go:generate mockery --name=IRepository --output=./mocks --case=underscore
+type IRepository interface {
+        GetWeather(cityId int) (entity.Weather, error)
+        GetWeatherList(citiesId []int) (entity.Weather, error)
+        GetForecast(city string) (entity.Weather, error)
+}
+
+type repo struct {
+        http  repohttp.IHttp
+        cache repocache.ICache
+}
+
+func NewRepo(http repohttp.IHttp, cache repocache.ICache) IRepository <span class="cov0" title="0">{
+        return &amp;repo{
+                http:  http,
+                cache: cache,
+        }
+}</span>
+
+func (r *repo) GetWeather(cityId int) (entity.Weather, error) <span class="cov8" title="1">{
+        weather := r.cache.GetWeather(cityId)
+        if len(weather.List) == 0 </span><span class="cov8" title="1">{
+                webWeather, err := r.http.GetWeather(cityId)
+                if err != nil </span><span class="cov8" title="1">{
+                        return weather, err
+                }</span>
+
+                <span class="cov8" title="1">r.cache.SetWeather(cityId, webWeather)
+                return webWeather, nil</span>
+        }
+
+        <span class="cov8" title="1">return weather, nil</span>
+}
+
+func (r *repo) GetWeatherList(citiesId []int) (entity.Weather, error) <span class="cov8" title="1">{
+        var weather entity.Weather
+        var newIds []int
+
+        for _, id := range citiesId </span><span class="cov8" title="1">{
+                w := r.cache.GetWeather(id)
+
+                if len(w.List) == 0 </span><span class="cov8" title="1">{
+                        newIds = append(newIds, id)
+                }</span>
+
+                <span class="cov8" title="1">weather.List = append(weather.List, w.List...)</span>
+        }
+
+        <span class="cov8" title="1">if len(newIds) == 0 </span><span class="cov8" title="1">{
+                return weather, nil
+        }</span>
+
+        <span class="cov8" title="1">webWeather, err := r.http.GetWeatherList(newIds)
+        if err != nil </span><span class="cov8" title="1">{
+                return weather, err
+        }</span>
+
+        <span class="cov8" title="1">for _, w := range webWeather.List </span><span class="cov8" title="1">{
+                r.cache.SetWeather(w.Id, entity.Weather{List: []entity.List{w}})
+                weather.List = append(weather.List, w)
+        }</span>
+
+        <span class="cov8" title="1">return weather, nil</span>
+}
+
+func (r *repo) GetForecast(city string) (entity.Weather, error) <span class="cov8" title="1">{
+        weather := r.cache.GetForecast(city)
+        if len(weather.List) == 0 </span><span class="cov8" title="1">{
+
+                webWeather, err := r.http.GetForecast(city)
+                if err != nil </span><span class="cov8" title="1">{
+                        return weather, err
+                }</span>
+
+                <span class="cov8" title="1">r.cache.SetForecast(city, webWeather)
+                return webWeather, nil</span>
+        }
+        
+        <span class="cov8" title="1">return weather, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">// Code generated by mockery v2.44.1. DO NOT EDIT.
+
+package mocks
+
+import (
+        entity "weather/internal/domain/entity"
+
+        mock "github.com/stretchr/testify/mock"
+)
+
+// IRepository is an autogenerated mock type for the IRepository type
+type IRepository struct {
+        mock.Mock
+}
+
+// GetForecast provides a mock function with given fields: city
+func (_m *IRepository) GetForecast(city string) (entity.Weather, error) <span class="cov8" title="1">{
+        ret := _m.Called(city)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetForecast")</span>
+        }
+
+        <span class="cov8" title="1">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func(string) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(city)
+        }</span>
+        <span class="cov8" title="1">if rf, ok := ret.Get(0).(func(string) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(city)
+        }</span> else<span class="cov8" title="1"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov8" title="1">if rf, ok := ret.Get(1).(func(string) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(city)
+        }</span> else<span class="cov8" title="1"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov8" title="1">return r0, r1</span>
+}
+
+// GetWeather provides a mock function with given fields: cityId
+func (_m *IRepository) GetWeather(cityId int) (entity.Weather, error) <span class="cov0" title="0">{
+        ret := _m.Called(cityId)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetWeather")</span>
+        }
+
+        <span class="cov0" title="0">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func(int) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(cityId)
+        }</span>
+        <span class="cov0" title="0">if rf, ok := ret.Get(0).(func(int) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(cityId)
+        }</span> else<span class="cov0" title="0"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov0" title="0">if rf, ok := ret.Get(1).(func(int) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(cityId)
+        }</span> else<span class="cov0" title="0"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov0" title="0">return r0, r1</span>
+}
+
+// GetWeatherList provides a mock function with given fields: citiesId
+func (_m *IRepository) GetWeatherList(citiesId []int) (entity.Weather, error) <span class="cov0" title="0">{
+        ret := _m.Called(citiesId)
+
+        if len(ret) == 0 </span><span class="cov0" title="0">{
+                panic("no return value specified for GetWeatherList")</span>
+        }
+
+        <span class="cov0" title="0">var r0 entity.Weather
+        var r1 error
+        if rf, ok := ret.Get(0).(func([]int) (entity.Weather, error)); ok </span><span class="cov0" title="0">{
+                return rf(citiesId)
+        }</span>
+        <span class="cov0" title="0">if rf, ok := ret.Get(0).(func([]int) entity.Weather); ok </span><span class="cov0" title="0">{
+                r0 = rf(citiesId)
+        }</span> else<span class="cov0" title="0"> {
+                r0 = ret.Get(0).(entity.Weather)
+        }</span>
+
+        <span class="cov0" title="0">if rf, ok := ret.Get(1).(func([]int) error); ok </span><span class="cov0" title="0">{
+                r1 = rf(citiesId)
+        }</span> else<span class="cov0" title="0"> {
+                r1 = ret.Error(1)
+        }</span>
+
+        <span class="cov0" title="0">return r0, r1</span>
+}
+
+// NewIRepository creates a new instance of IRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func NewIRepository(t interface {
+        mock.TestingT
+        Cleanup(func())
+}) *IRepository <span class="cov0" title="0">{
+        mock := &amp;IRepository{}
+        mock.Mock.Test(t)
+
+        t.Cleanup(func() </span><span class="cov0" title="0">{ mock.AssertExpectations(t) }</span>)
+
+        <span class="cov0" title="0">return mock</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package transport
+
+import (
+        "weather/internal/domain/service"
+
+        "github.com/labstack/echo/v4"
+)
+
+type handler struct {
+        s      service.IService
+        cities map[string]int
+}
+
+func NewHandler(cities map[string]int, s service.IService) *handler <span class="cov0" title="0">{
+        return &amp;handler{
+                s:      s,
+                cities: cities,
+        }
+}</span>
+
+func (h *handler) InitRoutes(e *echo.Echo) <span class="cov8" title="1">{
+        e.GET("/weather/:city", h.weatherByCity)
+        e.GET("/weather", h.weather)
+        e.GET("/weather/average", h.average)
+}</span>
+
+func (h *handler) errorResp(err error) map[string]interface{} <span class="cov8" title="1">{
+        return map[string]interface{}{"error": err.Error()}
+}</span>
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package transport
+
+import (
+        "fmt"
+        "weather/internal/domain/dto"
+
+        "github.com/labstack/echo/v4"
+)
+
+func (h *handler) average(c echo.Context) error <span class="cov8" title="1">{
+        var cities []string
+
+        if len(h.cities) == 0 </span><span class="cov8" title="1">{
+                return c.JSON(400, h.errorResp(fmt.Errorf("empty cities map")))
+        }</span>
+
+        <span class="cov8" title="1">for city := range h.cities </span><span class="cov8" title="1">{
+                cities = append(cities, city)
+        }</span>
+
+        <span class="cov8" title="1">average, err := h.s.GetAverage(cities)
+        if err != nil </span><span class="cov8" title="1">{
+                return c.JSON(500, h.errorResp(err))
+        }</span>
+
+        <span class="cov8" title="1">return c.JSON(200, average)</span>
+}
+
+func (h *handler) weatherByCity(c echo.Context) error <span class="cov8" title="1">{
+        city := c.Param("city")
+
+        if _, ok := h.cities[city]; !ok </span><span class="cov8" title="1">{
+                return c.JSON(400, h.errorResp(fmt.Errorf("city not found")))
+        }</span>
+
+        <span class="cov8" title="1">weather, err := h.s.GetWeather(h.cities[city])
+        if err != nil </span><span class="cov8" title="1">{
+                return c.JSON(500, h.errorResp(err))
+        }</span>
+
+        <span class="cov8" title="1">if len(weather.List) == 0</span><span class="cov8" title="1">{
+                return c.JSON(400, h.errorResp(fmt.Errorf("city not found")))
+        }</span>
+
+        <span class="cov8" title="1">return c.JSON(200, dto.NewWeatherResponse(weather.List))</span>
+}
+
+func (h *handler) weather(c echo.Context) error <span class="cov8" title="1">{
+        var citiesId []int
+
+        if len(h.cities) == 0 </span><span class="cov8" title="1">{
+                return c.JSON(400, h.errorResp(fmt.Errorf("empty cities map")))
+        }</span>
+
+        <span class="cov8" title="1">for _, id := range h.cities </span><span class="cov8" title="1">{
+                citiesId = append(citiesId, id)
+        }</span>
+
+        <span class="cov8" title="1">weather, err := h.s.GetWeatherList(citiesId)
+        if err != nil </span><span class="cov8" title="1">{
+                return c.JSON(500, h.errorResp(err))
+        }</span>
+
+        <span class="cov8" title="1">if len(weather.List) != len(h.cities)</span><span class="cov8" title="1">{
+                return c.JSON(400, h.errorResp(fmt.Errorf("city not found")))
+        }</span>
+
+        <span class="cov8" title="1">return c.JSON(200, dto.NewWeatherListResponse(weather.List))</span>
+}</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
