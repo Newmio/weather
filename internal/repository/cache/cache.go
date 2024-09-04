@@ -1,7 +1,6 @@
 package repocache
 
 import (
-	"fmt"
 	"sync"
 	"time"
 	"weather/internal/domain/entity"
@@ -39,7 +38,6 @@ func (c *cache) clearWeather() {
 	for range ticker.C {
 		c.mu.Lock()
 		c.weather = make(map[int]entity.Weather)
-		fmt.Println("deleted weather")
 		c.mu.Unlock()
 	}
 }

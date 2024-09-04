@@ -1,0 +1,11 @@
+{{range .}}
+<div class="weather-card">
+    <h3>{{.City}}</h3>
+    <p>Temperature: 27.07°C</p>
+    <p>Feels Like: {{.FeelsLike}}°C</p>
+    <p>Min Temperature: {{.TempMin}}°C</p>
+    <p>Max Temperature: {{.TempMax}}°C</p>
+    <p>Wind Speed: {{.WindSpeed}} m/s</p>
+    <p>Wind Direction: {{.WindDeg}}°</p>
+</div>
+{{end}}

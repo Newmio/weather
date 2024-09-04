@@ -2,7 +2,7 @@ package dto
 
 import "weather/internal/domain/entity"
 
-type weatherResponse struct {
+type WeatherResponse struct {
 	City      string  `json:"city"`
 	Temp      float64 `json:"temp"`
 	FeelsLike float64 `json:"feels_like"`
@@ -12,8 +12,8 @@ type weatherResponse struct {
 	WindDeg   int     `json:"wind_deg"`
 }
 
-func NewWeatherListResponse(weather []entity.List) []weatherResponse {
-	var response []weatherResponse
+func NewWeatherListResponse(weather []entity.List) []WeatherResponse {
+	var response []WeatherResponse
 
 	for _, w := range weather {
 		response = append(response, NewWeatherResponse([]entity.List{w}))
@@ -22,8 +22,8 @@ func NewWeatherListResponse(weather []entity.List) []weatherResponse {
 	return response
 }
 
-func NewWeatherResponse(weather []entity.List) weatherResponse {
-	return weatherResponse{
+func NewWeatherResponse(weather []entity.List) WeatherResponse {
+	return WeatherResponse{
 		City:      weather[0].Name,
 		Temp:      weather[0].Main.Temp,
 		FeelsLike: weather[0].Main.FeelsLike,

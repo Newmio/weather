@@ -2,7 +2,7 @@ package transport
 
 import (
 	"fmt"
-	"weather/internal/domain/dto"
+	"weather/internal/app/dto"
 
 	"github.com/labstack/echo/v4"
 )
@@ -23,7 +23,17 @@ func (h *handler) average(c echo.Context) error {
 		return c.JSON(500, h.errorResp(err))
 	}
 
-	return c.JSON(200, average)
+	switch c.Request().Header.Get("Accept") {
+	case "text/html":
+		html, err := renderHtml("template/average.html", average)
+		if err != nil {
+			return c.JSON(500, h.errorResp(err))
+		}
+
+		return c.HTML(200, html)
+	default:
+		return c.JSON(200, average)
+	}
 }
 
 func (h *handler) weatherByCity(c echo.Context) error {
@@ -38,15 +48,30 @@ func (h *handler) weatherByCity(c echo.Context) error {
 		return c.JSON(500, h.errorResp(err))
 	}
 
-	if len(weather.List) == 0{
+	if len(weather.List) == 0 {
 		return c.JSON(400, h.errorResp(fmt.Errorf("city not found")))
 	}
 
-	return c.JSON(200, dto.NewWeatherResponse(weather.List))
+	switch c.Request().Header.Get("Accept") {
+	case "text/html":
+		html, err := renderHtml("template/weather.html", dto.NewWeatherListResponse(weather.List))
+		if err != nil {
+			return c.JSON(500, h.errorResp(err))
+		}
+
+		return c.HTML(200, html)
+	default:
+		return c.JSON(200, dto.NewWeatherResponse(weather.List))
+	}
 }
 
 func (h *handler) weather(c echo.Context) error {
 	var citiesId []int
+	city := c.QueryParam("city")
+
+	if city != ""{
+		c.Redirect(302, fmt.Sprintf("/weather/%s", city))
+	}
 
 	if len(h.cities) == 0 {
 		return c.JSON(400, h.errorResp(fmt.Errorf("empty cities map")))
@@ -61,9 +86,20 @@ func (h *handler) weather(c echo.Context) error {
 		return c.JSON(500, h.errorResp(err))
 	}
 
-	if len(weather.List) != len(h.cities){
+	if len(weather.List) != len(h.cities) {
 		return c.JSON(400, h.errorResp(fmt.Errorf("city not found")))
 	}
 
-	return c.JSON(200, dto.NewWeatherListResponse(weather.List))
+	switch c.Request().Header.Get("Accept") {
+
+	case "text/html":
+		html, err := renderHtml("template/weather.html", dto.NewWeatherListResponse(weather.List))
+		if err != nil {
+			return c.JSON(500, h.errorResp(err))
+		}
+		return c.HTML(200, html)
+
+	default:
+		return c.JSON(200, dto.NewWeatherListResponse(weather.List))
+	}
 }
